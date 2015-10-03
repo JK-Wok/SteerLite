@@ -48,8 +48,7 @@ void Curve::drawCurve(Color curveColor, float curveThickness, int window)
 	
 	std::vector<Point> drawPoints;
 
-	drawPoints.push_back(controlPoints[0].position);
-	for(float t=0; t<=controlPoints[controlPoints.size()-1].time; t=t+window) {
+	for(float t=0; t<controlPoints[controlPoints.size()-1].time; t=t+1) {
 		Point newPoint;
 		calculatePoint(newPoint, t);
 		drawPoints.push_back(newPoint);
@@ -87,6 +86,10 @@ void Curve::sortControlPoints()
 		controlPoints[minIndex] = controlPoints[i];
 		controlPoints[i] = temp[0];
 		temp.clear();
+	}
+
+	for(int j=0; j<controlPoints.size(); j++) {
+		std::cout << controlPoints[j].time << " : " << controlPoints[j].position << std::endl;
 	}
 
 	return;
@@ -188,6 +191,8 @@ Point Curve::useHermiteCurve(const unsigned int nextPoint, const float time)
 	newPosition.x = sx*a + nx*b + stx*c + ntx*d;
 	newPosition.y = sy*a + ny*b + sty*c + nty*d;
 	newPosition.z = sz*a + nz*b + stz*c + ntz*d;
+
+	//std::cout << "Time: " << time << "    " << newPosition.y << " " << controlPoints[nextPoint-1].position.y << " " << controlPoints[nextPoint].position.y << std::endl;
 
 	// Calculate time interval, and normal time required for later curve calculations
 
