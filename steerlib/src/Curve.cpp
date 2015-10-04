@@ -206,15 +206,48 @@ Point Curve::useHermiteCurve(const unsigned int nextPoint, const float time)
 Point Curve::useCatmullCurve(const unsigned int nextPoint, const float time)
 {
 	Point newPosition;
+	float normalTime, intervalTime;
 
-	//================DELETE THIS PART AND THEN START CODING===================
-	static bool flag = false;
-	if (!flag)
-	{
-		std::cerr << "ERROR>>>>Member function useCatmullCurve is not implemented!" << std::endl;
-		flag = true;
+	normalTime = time - controlPoints[nextPoint - 1].time;
+	intervalTime = controlPoints[nextPoint].time - controlPoints[nextPoint - 1].time;
+
+	float P0x, P0y, P1x, P1y, P2x, P2y, P3x, P3y;
+	
+	P0x = controlPoints[nextPoint - 1].position.x;
+	P0y = controlPoints[nextPoint - 1].position.y;
+	P1x = controlPoints[nextPoint].position.x;
+	P1y = controlPoints[nextPoint].position.y;
+
+	if (controlPoints[nextPoint + 1] == NULL) {
+		P2x = controlPoints[nextPoint].position.x;
+		P2y = controlPoints[nextPoint].position.y;
+		P3x = controlPoints[nextPoint].position.x;
+		P3y = controlPoints[nextPoint].position.y;
 	}
-	//=========================================================================
+	else {
+		P2x = controlPoints[nextPoint + 1].position.x;
+		P2y = controlPoints[nextPoint + 1].position.y;
+		P3x = controlPoints[nextPoint + 2].position.x;
+		P3y = controlPoints[nextPoint + 2].position.y;
+	}
+
+	if (controlPoints[nextPoint + 2] == NULL) {
+		P3x = controlPoints[nextPoint + 1].position.x;
+		P3y = controlPoints[nextPoint + 1].position.y;
+	}
+	else {
+		P3x = controlPoints[nextPoint + 2].position.x;
+		P3y = controlPoints[nextPoint + 2].position.y;
+	}
+
+
+	t = sqrt(pow((P1x - P2x), 2) + pow((p1y - p2y), 2));
+	float t2 = pow(t, 2);
+	float t3 = t2 * t;
+
+	newPosition.x = 0.5 * ((2 * P1x) + (-P0x + P2x) * t + (2 * P0x - 5 * P1x + 4 * P2x - P3x) * t2 + (-1 * P0x + 3 * P1x - 3 * P2x + P3x) * t3);
+	newPosition.y = 0.5 * ((2 * P1y) + (-P0y + P2y) * t + (2 * P0y - 5 * P1y + 4 * P2y - P3y) * t2 + (-1 * P0y + 3 * P1y - 3 * P2y + P3y) * t3);
+	
 
 
 	// Calculate time interval, and normal time required for later curve calculations
