@@ -98,6 +98,11 @@ namespace Util {
 
 		// Implement Catmull-Rom curve
 		Point useCatmullCurve(const unsigned int nextPoint, const float time);
+		//Calculate tangent for Catmull-Rom curve
+		Vector getCatmullTangent(const unsigned int currPoint);
+		
+		//Calculate component of tangent for Catmull-Rom curve
+		float getCatmullTangent1D(int type, float currPos, float prevPos, float nextPos, float currTime, float prevTime, float nextTime);
 	};
 }
 
