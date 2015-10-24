@@ -15,7 +15,8 @@ SteerLib::GJK_EPA::GJK_EPA()
 //Look at the GJK_EPA.h header file for documentation and instructions
 bool SteerLib::GJK_EPA::intersect(float& return_penetration_depth, Util::Vector& return_penetration_vector, const std::vector<Util::Vector>& _shapeA, const std::vector<Util::Vector>& _shapeB)
 {
-    return false; // There is no collision
+	std::vector<Util::Vector> simplex;
+	return GJK(_shapeA, _shapeB, simplex);
 }
 
 float dotProduct(Util::Vector v1, Util::Vector v2) {
@@ -54,27 +55,34 @@ Util::Vector tripleProduct(Util::Vector v1, Util::Vector v2, Util::Vector v3) {
 	return crossProduct(crossProduct(v1, v2), v3);
 }
 
-bool GJK(std::vector<Util::Vector> shape1, std::vector<Util::Vector> shape2, std::vector<Util::Vector>& simplex) {
+bool SteerLib::GJK_EPA::GJK(std::vector<Util::Vector> shape1, std::vector<Util::Vector> shape2, std::vector<Util::Vector>& simplex) {
 	
-	const float EQUIVALENCERANGE = 1; //When checking if closest projection to origin is as close as original vector
 	Util::Vector v1, v2, v3;
 	Util::Vector arbitraryVector =  Util::Vector(1,0,0);
 
 	//pick point on Minkowski difference
 	v1 = getSupport(shape1, arbitraryVector) - getSupport(shape2, arbitraryVector*-1);
+	//std::cout << getSupport(shape1, arbitraryVector) << "  " << getSupport(shape2, arbitraryVector*-1) << std::endl;
+	//std::cout << v1 << std::endl;
 	//projection along v1 closest to origin
-	v2 = getSupport(shape1, v1) - getSupport(shape2, v1*-1);
-
-	if(fabsf(v1.length() - v2.length()) <= EQUIVALENCERANGE) //if closest projection to origin is equidistant from origin as original point, no intersect
-		return false;
+	v2 = getSupport(shape1, v1*-1) - getSupport(shape2, v1);
+	//std::cout << v2 << std::endl;
 
 	//find new vertex for simplex in direction of the origin
 	arbitraryVector = tripleProduct(v1-v2, v2*-1, v1-v2);
+	//std::cout << "new normal " << arbitraryVector << std::endl;
 	v3 = getSupport(shape1, arbitraryVector) - getSupport(shape2, arbitraryVector*-1);
+	//std::cout << v3 << std::endl;
 	
 	while(true) { //CONDITION?
+		//if(fabsf(v2.length() - v3.length()) <= EQUIVALENCERANGE || v1.length() - v3.length() <= EQUIVALENCERANGE) {
+		if(v2 == v3 || v1 == v3) { //if the vertex closest to the origin is already in the simplex, no intersect
+			return false;
+		}
+
 		float findOrigin1, findOrigin2; //used to determine what partition of the extended edge minkowski difference that the origin is in
 		findOrigin1 = dotProduct(v1-v3, v3*-1);
+		//std::cout << v1-v3 << std::endl;
 		findOrigin2 = dotProduct(v2-v3, v3*-1);
 		if(findOrigin1<0 && findOrigin2<0) //origin is outside simplex, no intersect
 			return false;
@@ -84,11 +92,8 @@ bool GJK(std::vector<Util::Vector> shape1, std::vector<Util::Vector> shape2, std
 			returnSimplex.push_back(v2);
 			returnSimplex.push_back(v3);
 			simplex = returnSimplex;
+			//std::cout << v1 << v2 << v3 << std::endl;
 			return true;
-		}
-
-		if(fabsf(v2.length() - v3.length()) <= EQUIVALENCERANGE) {
-			return false;
 		}
 
 		if(findOrigin1>=0 && findOrigin2<0) { //keep v1, discard v2
@@ -102,5 +107,6 @@ bool GJK(std::vector<Util::Vector> shape1, std::vector<Util::Vector> shape2, std
 		arbitraryVector = tripleProduct(v1-v2, v2*-1, v1-v2);
 		v3 = getSupport(shape1, arbitraryVector) - getSupport(shape2, arbitraryVector*-1);
 
+		//std::cout << v1 << v2 << v3 << std::endl;
 	}
 }
