@@ -135,9 +135,11 @@ Util::Vector SteerLib::GJK_EPA::EPA(std::vector<Util::Vector> shape1, std::vecto
 
 	for (int i = 0; i < 100; i++) {
 		//get the edge to the origin provided by GJK
-		simplex.front();
-		v1 = simplex.pop_front();
-		v2 = simplex.pop_front();
+		v1 = simplex.front();
+		simplex.pop_front();
+		simplex.push_back(v1);
+		v2 = simplex.front();
+		simplex.push_front();
 		//get the new support point in the direction of the edge
 		v3 = getSupport(v1, v2);
 		projection = normal(v1, v2);
@@ -149,7 +151,7 @@ Util::Vector SteerLib::GJK_EPA::EPA(std::vector<Util::Vector> shape1, std::vecto
 			Penetration_depth = p1d;
 			return Penetration_vector = projection;
 		}
-		simplex.pop_back(v3);
+		simplex.push_back(v3);
 	}
 	Penetration_depth = p1d;
 	return Penetration_vector = projection;
