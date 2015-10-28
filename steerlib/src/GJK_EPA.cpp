@@ -27,6 +27,13 @@ float dotProduct(Util::Vector v1, Util::Vector v2) {
 	return v1.x * v2.x + v1.z * v2.z;
 }
 
+Util::Vector normal(Util::Vector v1, Util::Vector v2) {
+	Util::Vector D;
+	D.x = v1.x - v2.x;
+	D.z = v1.z - v2.z;
+	return D;
+}
+
 Util::Vector getSupport(std::vector<Util::Vector> shape, Util::Vector v) {
 	float maxDot;
 	Util::Vector supportVector;
@@ -59,7 +66,7 @@ Util::Vector tripleProduct(Util::Vector v1, Util::Vector v2, Util::Vector v3) {
 	return crossProduct(crossProduct(v1, v2), v3);
 }
 
-bool SteerLib::GJK_EPA::GJK(std::vector<Util::Vector> shape1, std::vector<Util::Vector> shape2, std::vector<Util::Vector>& simplex) {
+bool SteerLib::GJK_EPA::GJK(std::vector<Util::Vector> shape1, std::vector<Util::Vector> shape2, std::vector<Util::Deque>& simplex) {
 	
 	Util::Vector v1, v2, v3;
 	Util::Vector arbitraryVector =  Util::Vector(1,0,0);
@@ -91,7 +98,7 @@ bool SteerLib::GJK_EPA::GJK(std::vector<Util::Vector> shape1, std::vector<Util::
 		if(findOrigin1<0 && findOrigin2<0) //origin is outside simplex, no intersect
 			return false;
 		else if(findOrigin1>=0 && findOrigin2>=0) { //origin is in simplex, shapes intersect
-			std::vector<Util::Vector> returnSimplex;
+			std::vector<Util::deque> returnSimplex;
 			returnSimplex.push_back(v1);
 			returnSimplex.push_back(v2);
 			returnSimplex.push_back(v3);
