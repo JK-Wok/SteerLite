@@ -66,7 +66,7 @@ Util::Vector tripleProduct(Util::Vector v1, Util::Vector v2, Util::Vector v3) {
 	return crossProduct(crossProduct(v1, v2), v3);
 }
 
-bool SteerLib::GJK_EPA::GJK(std::vector<Util::Vector> shape1, std::vector<Util::Vector> shape2, std::vector<Util::Deque>& simplex) {
+bool SteerLib::GJK_EPA::GJK(std::vector<Util::Vector> shape1, std::vector<Util::Vector> shape2, std::vector<Util::Vector>& simplex) {
 	
 	Util::Vector v1, v2, v3;
 	Util::Vector arbitraryVector =  Util::Vector(1,0,0);
@@ -98,7 +98,7 @@ bool SteerLib::GJK_EPA::GJK(std::vector<Util::Vector> shape1, std::vector<Util::
 		if(findOrigin1<0 && findOrigin2<0) //origin is outside simplex, no intersect
 			return false;
 		else if(findOrigin1>=0 && findOrigin2>=0) { //origin is in simplex, shapes intersect
-			std::vector<Util::deque> returnSimplex;
+			std::vector<Util::Vector> returnSimplex;
 			returnSimplex.push_back(v1);
 			returnSimplex.push_back(v2);
 			returnSimplex.push_back(v3);
