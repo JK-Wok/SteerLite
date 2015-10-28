@@ -16,7 +16,11 @@ SteerLib::GJK_EPA::GJK_EPA()
 bool SteerLib::GJK_EPA::intersect(float& return_penetration_depth, Util::Vector& return_penetration_vector, const std::vector<Util::Vector>& _shapeA, const std::vector<Util::Vector>& _shapeB)
 {
 	std::vector<Util::Vector> simplex;
-	return GJK(_shapeA, _shapeB, simplex);
+	bool col =  GJK(_shapeA, _shapeB, simplex);
+	if(col==false)
+		return false;
+	EPA(_shapeA, _shapeB, simplex, return_penetration_depth, return_penetration_vector);
+	return true;
 }
 
 float dotProduct(Util::Vector v1, Util::Vector v2) {
@@ -108,5 +112,81 @@ bool SteerLib::GJK_EPA::GJK(std::vector<Util::Vector> shape1, std::vector<Util::
 		v3 = getSupport(shape1, arbitraryVector) - getSupport(shape2, arbitraryVector*-1);
 
 		//std::cout << v1 << v2 << v3 << std::endl;
+	}
+}
+
+bool SteerLib::GJK_EPA::EPA(std::vector<Util::Vector> shape1, std::vector<Util::Vector> shape2, std::vector<Util::Vector> simplex, float& depth, Util::Vector& mtv) {
+	
+	float DEPTHTOLERANCE = .01f;
+
+	while(true) { //CONDITION?
+		int index = simplex.size()-1;
+	
+		float penDepth;
+		Util::Vector addSimplex;
+	
+		float closest;
+		Util::Vector closestVector;
+		Util::Vector edge;
+
+		edge = simplex[index] - simplex[0];
+		closestVector = tripleProduct(edge, simplex[index], edge);
+		//std::cout << closestVector;
+		closestVector = closestVector / closestVector.norm(); //normalize vector
+		//std::cout << closestVector << std::endl;
+		closest = dotProduct(simplex[index], closestVector);
+
+		for(int i=0; i < simplex.size()-1; i++) {
+			//std::cout << simplex.size() << std::endl;
+			//std::cout << simplex[i] << std::endl;
+			Util::Vector testVector;
+			float testDepth;
+			
+			edge = simplex[i+1] - simplex[i];
+			testVector = tripleProduct(edge, simplex[i], edge);
+			//std::cout << testVector;
+			testVector = testVector / testVector.norm(); //normalize vector
+			//std::cout << testVector << std::endl;
+			testDepth = dotProduct(simplex[i], testVector);
+
+			if(testDepth < closest) {
+				closest = testDepth;
+				closestVector = testVector;
+				index = i;	
+			}
+		}
+
+		addSimplex = getSupport(shape1, closestVector) - getSupport(shape2, closestVector*-1);
+		penDepth = dotProduct(addSimplex, closestVector);
+
+		//std::cout << closestVector << addSimplex << std::endl << std::endl;
+		if(penDepth <= DEPTHTOLERANCE) {
+			depth = penDepth;
+			mtv = closestVector;
+			return true;
+		}
+		
+
+		if(index == simplex.size()-1) {
+			if(simplex[simplex.size()-1] == addSimplex || simplex[0] == addSimplex) {
+				depth = penDepth;
+				mtv = closestVector;
+				return true;
+			}
+			simplex.push_back(addSimplex);
+		}
+		else {
+			std::vector<Util::Vector>::iterator it = simplex.begin();
+			for(int i=0; i <= index; i++) {
+				it++;
+			}
+			//std::cout << *it << std::endl;
+			if(*it == addSimplex || (*(it-1) == addSimplex)) {
+				depth = penDepth;
+				mtv = closestVector;
+				return true;
+			}
+			simplex.insert(it, addSimplex);
+		}
 	}
 }
