@@ -263,9 +263,27 @@ Util::Vector SocialForcesAgent::calcRepulsionForce(float dt)
 
 Util::Vector SocialForcesAgent::calcAgentRepulsionForce(float dt)
 {
-    std::cerr<<"<<<calcAgentRepulsionForce>>> Please Implement my body\n";
+	Util::Vector returnVector = Util::Vector(0,0,0);
 
-    return Util::Vector(0,0,0);
+	std::set<SteerLib::SpatialDatabaseItemPtr> _neighbors;
+	gSpatialDatabase->getItemsInRange(_neighbors, _position.x-(this->_radius + _SocialForcesParams.sf_query_radius), _position.x+(this->_radius + _SocialForcesParams.sf_query_radius),
+			_position.z-(this->_radius + _SocialForcesParams.sf_query_radius), _position.z+(this->_radius + _SocialForcesParams.sf_query_radius), dynamic_cast<SteerLib::SpatialDatabaseItemPtr>(this));
+	
+	SteerLib::AgentInterface * tmp_agent;
+	for(std::set<SteerLib::SpatialDatabaseItemPtr>::iterator neighbor = _neighbors.begin(); neighbor != _neighbors.end(); neighbor++) { 
+		if((*neighbor)->isAgent()) {
+			tmp_agent = dynamic_cast<SteerLib::AgentInterface *>(*neighbor);
+		}
+		else {
+			continue;
+		}
+
+		if(tmp_agent->computePenetration(this->position(), this->radius()) > 0.000001) {
+			returnVector = returnVector + (tmp_agent->computePenetration(this->position(), this->radius()) * _SocialForcesParams.sf_agent_body_force * normalize(position() - tmp_agent->position()));
+		}
+	}
+
+    return returnVector;
 }
 
 
