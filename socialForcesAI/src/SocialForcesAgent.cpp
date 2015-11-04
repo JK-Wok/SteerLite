@@ -273,7 +273,7 @@ Util::Vector SocialForcesAgent::calcProximityForce(float dt)
 Vector SocialForcesAgent::calcGoalForce(Vector _goalDirection, float _dt)
 {
 	Util::Vector returnVector = Util::Vector(0, 0, 0);
-	returnVector = (((_goalDirection * PERFERED_SPEED) - velocity()) / _dt);
+	returnVector = (((_goalDirection * PREFERED_SPEED) - velocity()) / _dt);
 	return returnVector;
 }
 
@@ -334,7 +334,7 @@ Util::Vector SocialForcesAgent::calcWallRepulsionForce(float dt)
 			Util::Vector wall_normal = calcWallNormal(tmp_ob);
 			std::pair<Util::Point, Util::Point> line = calcWallPointsFromNormal(tmp_ob, wall_normal);
 			std::pair<float, Util::Point> min_stuff = minimum_distance(line.first, line.second, position());
-			returnVector = wall_normal * (min_stuff.first + radius())*_SocialForcesParams.sf_body_force;
+			returnVector = returnVector + wall_normal * (min_stuff.first + radius())*_SocialForcesParams.sf_body_force;
 		}
 	}
 	return returnVector;
@@ -611,11 +611,11 @@ void SocialForcesAgent::updateAI(float timeStamp, float dt, unsigned int frameNu
 	Util::Vector proximityForce = calcProximityForce(dt);
 
 // #define _DEBUG_ 1
-//#ifdef _DEBUG_
+#ifdef _DEBUG_
 	std::cout << "agent" << id() << " repulsion force " << repulsionForce << std::endl;
 	std::cout << "agent" << id() << " proximity force " << proximityForce << std::endl;
 	std::cout << "agent" << id() << " pref force " << prefForce << std::endl;
-//#endif
+#endif
 	// _velocity = _newVelocity;
 	int alpha=1;
 	if ( repulsionForce.length() > 0.0)
