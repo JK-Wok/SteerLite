@@ -312,8 +312,6 @@ Util::Vector SocialForcesAgent::calcAgentRepulsionForce(float dt)
 }
 
 
-Util::Vector SocialForcesAgent::calcWallRepulsionForce(float dt)
-{
    Util::Vector SocialForcesAgent::calcWallRepulsionForce(float dt)
 {
 	Util::Vector returnVector = Util::Vector(0, 0, 0);
@@ -342,7 +340,7 @@ Util::Vector SocialForcesAgent::calcWallRepulsionForce(float dt)
 	return returnVector;
 }
 
-}
+
 
 
 std::pair<Util::Point, Util::Point> SocialForcesAgent::calcWallPointsFromNormal(SteerLib::ObstacleInterface* obs, Util::Vector normal)
