@@ -270,9 +270,9 @@ Util::Vector SocialForcesAgent::calcProximityForce(float dt)
 
 Vector SocialForcesAgent::calcGoalForce(Vector _goalDirection, float _dt)
 {
-    std::cerr<<"<<<calcGoalForce>>> Please Implement my body\n";
-
-    return Util::Vector(0,0,0);
+	Util::Vector returnVector = Util::Vector(0, 0, 0);
+	returnVector = (((_goalDirection * PERFERED_SPEED) - velocity()) / _dt);
+	return returnVector;
 }
 
 
