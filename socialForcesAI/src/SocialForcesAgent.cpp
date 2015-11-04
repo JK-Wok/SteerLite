@@ -272,9 +272,9 @@ Util::Vector SocialForcesAgent::calcProximityForce(float dt)
 
 Vector SocialForcesAgent::calcGoalForce(Vector _goalDirection, float _dt)
 {
-    std::cerr<<"<<<calcGoalForce>>> Please Implement my body\n";
-
-    return Util::Vector(0,0,0);
+	Util::Vector returnVector = Util::Vector(0, 0, 0);
+	returnVector = (((_goalDirection * PERFERED_SPEED) - velocity()) / _dt);
+	return returnVector;
 }
 
 
@@ -315,9 +315,29 @@ Util::Vector SocialForcesAgent::calcAgentRepulsionForce(float dt)
 
 Util::Vector SocialForcesAgent::calcWallRepulsionForce(float dt)
 {
-    std::cerr<<"<<<calcWallRepulsionForce>>> Please Implement my body\n";
+	Util::Vector returnVector = Util::Vector(0, 0, 0);
+	std::set<SteerLib::SpatialDatabaseItemPtr> _neighbors;
+	gSpatialDatabase->getItemsInRange(_neighbors, _position.x - (this->_radius + _SocialForcesParams.sf_query_radius),
+		_position.x + (this->_radius + _SocialForcesParams.sf_query_radius),_position.z - (this->_radius + _SocialForcesParams.sf_query_radius),
+		_position.z + (this->_radius + _SocialForcesParams.sf_query_radius),dynamic_cast<SteerLib::SpatialDatabaseItemPtr>(this));
 
-    return Util::Vector(0,0,0);
+	SteerLib::ObstacleInterface *tmp_ob;
+	for (std::set<SteerLib::SpatialDatabaseItemPtr>::iterator neighbor = _neighbors.begin(); neighbor != _neighbors.end(); neighbor++) {
+		if (!(*neighbor)->isAgent()){
+			tmp_ob = dynamic_cast<SteerLib::ObstacleInterface *>(*neighbor);
+		}
+		else
+		{
+			continue;
+		}
+		if (tmp_ob->computePenetration(this->position(), this->radius()) > 0.000001) {
+			Util::Vector wall_normal = calcWallNormal(tmp_ob);
+			std::pair<Util::Point, Util::Point> line = calcWallPointsFromNormal(tmp_ob, wall_normal);
+			std::pair<float, Util::Point> min_stuff = minimum_distance(line.first, line.second, position());
+			returnVector = wall_normal * (min_stuff.first + radius())*_SocialForcesParams.sf_body_force;
+		}
+	}
+	return returnVector;
 }
 
 Util::Vector SocialForcesAgent::calcSlidingForce(float dt) {
@@ -360,6 +380,8 @@ Util::Vector crossProduct(Util::Vector v1, Util::Vector v2) {
 
 	return prod;
 }
+
+
 
 std::pair<Util::Point, Util::Point> SocialForcesAgent::calcWallPointsFromNormal(SteerLib::ObstacleInterface* obs, Util::Vector normal)
 {
