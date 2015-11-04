@@ -333,8 +333,8 @@ Util::Vector SocialForcesAgent::calcAgentRepulsionForce(float dt)
 			Util::Vector wall_normal = calcWallNormal(tmp_ob);
 			std::pair<Util::Point, Util::Point> line = calcWallPointsFromNormal(tmp_ob, wall_normal);
 			std::pair<float, Util::Point> min_stuff = minimum_distance(line.first, line.second, position());
-			returnVector = (returnVector + ((((wall_normal)*(radius() + _SocialForcesParams.sf_personal_space_threshold - (min_stuff.first))) / min_stuff.first)*_SocialForcesParams.sf_body_force*dt))+((dot(forward(), rightSideInXZPlane(wall_normal))*
-			rightSideInXZPlane(wall_normal)*tmp_ob->computePenetration(this->position(), this->radius()))* _SocialForcesParams.sf_sliding_friction_force * dt);
+			returnVector = wall_normal * (min_stuff.first + radius())*_SocialForcesParams.sf_body_force;
+			return returnVector;
 		}
 	}
 	return returnVector;
