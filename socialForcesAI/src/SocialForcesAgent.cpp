@@ -251,11 +251,12 @@ Util::Vector SocialForcesAgent::calcProximityForce(float dt)
 	for(std::set<SteerLib::SpatialDatabaseItemPtr>::iterator neighbor = _neighbors.begin(); neighbor != _neighbors.end(); neighbor++) {
 		if((*neighbor)->isAgent()) {
 			tmp_agent = dynamic_cast<SteerLib::AgentInterface *>(*neighbor);
-			Util::Vector away_tmp = normalize(position() - tmp_agent->position());
+			Util::Vector away_tmp = normalize(this->position() - tmp_agent->position());
 			away = away + (away_tmp * (_SocialForcesParams.sf_agent_a * exp((((this->radius() + tmp_agent->radius()) - (this->position() - tmp_agent->position()).length()) / _SocialForcesParams.sf_agent_b))));
 		}
 
 		else {
+			tmp_ob = dynamic_cast<SteerLib::ObstacleInterface *>(*neighbor);
 			Util::Vector wall_normal = calcWallNormal(tmp_ob);
 			std::pair<Util::Point, Util::Point> line = calcWallPointsFromNormal(tmp_ob, wall_normal);
 			std::pair<float, Util::Point> min_stuff = minimum_distance(line.first, line.second, position());
@@ -264,6 +265,7 @@ Util::Vector SocialForcesAgent::calcProximityForce(float dt)
 		}
 	}
 
+	returnVector = away + away_obs;
 	return returnVector;
 }
 
@@ -587,11 +589,11 @@ void SocialForcesAgent::updateAI(float timeStamp, float dt, unsigned int frameNu
 	Util::Vector proximityForce = calcProximityForce(dt);
 
 // #define _DEBUG_ 1
-#ifdef _DEBUG_
+//#ifdef _DEBUG_
 	std::cout << "agent" << id() << " repulsion force " << repulsionForce << std::endl;
 	std::cout << "agent" << id() << " proximity force " << proximityForce << std::endl;
 	std::cout << "agent" << id() << " pref force " << prefForce << std::endl;
-#endif
+//#endif
 	// _velocity = _newVelocity;
 	int alpha=1;
 	if ( repulsionForce.length() > 0.0)
