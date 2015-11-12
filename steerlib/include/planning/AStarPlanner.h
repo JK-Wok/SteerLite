@@ -33,13 +33,16 @@ namespace SteerLib
 			double f;
 			double g;
 			Util::Point point;
-			AStarPlannerNode* parent;
-			AStarPlannerNode(Util::Point _point, double _g, double _f, AStarPlannerNode* _parent)
+			int parentIndex;
+
+			int gridIndex;
+
+			AStarPlannerNode(Util::Point _point, double _g, double _f, int _parent)
 			{
 				f = _f;
 				point = _point;
 				g = _g;
-				parent = _parent;
+				parentIndex = _parent;
 			}
 			bool operator<(AStarPlannerNode other) const
 		    {
@@ -96,8 +99,11 @@ namespace SteerLib
 			*/
 
 			bool computePath(std::vector<Util::Point>& agent_path, Util::Point start, Util::Point goal, SteerLib::GridDatabase2D * _gSpatialDatabase, bool append_to_path = false);
+
+			double calcHeuristic(Util::Point start, Util::Point goal, bool manhattan);
 		private:
 			SteerLib::GridDatabase2D * gSpatialDatabase;
+			
 	};
 
 
