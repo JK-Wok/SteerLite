@@ -22,10 +22,12 @@
 #define MIN(X,Y) ((X) < (Y) ? (X) : (Y))
 #define MAX(X,Y) ((X) > (Y) ? (X) : (Y))
 
-#define MANHATTAN false;
-#define GFAVOR 0;
-#define DIAGMOD false;
-#define HEUISTICWEIGHT 1.0f;
+//PART 1-4 MACROS
+#define MANHATTAN false
+//0 for no pref, 1 for higher preferred, -1 for lower preferred
+#define GFAVOR 0
+#define DIAGMOD false
+#define HEURISTICWEIGHT 1.0
 
 namespace SteerLib
 {
@@ -72,17 +74,9 @@ namespace SteerLib
 		return p;
 	}
 
-	class CompareF {
-	public:
-		bool operator()(SteerLib::AStarPlannerNode n1, SteerLib::AStarPlannerNode n2) {
-			if(n1.f < n2.f)
-				return true;
-			return false;
-		}
-	};
 
 	double AStarPlanner::calcHeuristic(Util::Point start, Util::Point goal, bool manhattan) {
-		if(manhattan == true) {
+		if(MANHATTAN) {
 			return abs(start.x - goal.x) + abs(start.z - goal.z);
 		}	
 		else {
@@ -93,15 +87,35 @@ namespace SteerLib
 	class priorityQueue {
 	public:
 		std::vector<SteerLib::AStarPlannerNode> heap;
+		double max = 10000;
 	
 		void siftUp(int heapIndex) {
 			int i = heapIndex;
 			while(i != 0) {
-				if(heap[i].f < heap[(i-1)/2].f) {
+				if(heap[i].f > heap[(i-1)/2].f) {
 					SteerLib::AStarPlannerNode tempNode = heap[(i-1)/2];
 					heap[(i-1)/2] = heap[i];
 					heap[i] = tempNode;
 					i = (i-1)/2;
+				}
+				else if(heap[i].f == heap[(i-1)/2].f) {
+					int gPref = GFAVOR;
+					if(gPref == -1 && heap[i].g < heap[(i-1)/2].g) {
+						SteerLib::AStarPlannerNode tempNode = heap[(i-1)/2];
+						heap[(i-1)/2] = heap[i];
+						heap[i] = tempNode;
+						i = (i-1)/2;
+
+					}
+					else if(gPref == 1 && heap[i].g > heap[(i-1)/2].g) {
+						SteerLib::AStarPlannerNode tempNode = heap[(i-1)/2];
+						heap[(i-1)/2] = heap[i];
+						heap[i] = tempNode;
+						i = (i-1)/2;
+					}
+					else {
+						return;
+					}
 				}
 				else {
 					return;
@@ -118,17 +132,35 @@ namespace SteerLib
 					swapIndex = 2*i+1;
 				}
 				else {
-					if(heap[2*i+1].f < heap[2*i+2].f)
+					if(heap[2*i+1].f > heap[2*i+2].f)
 						swapIndex = 2*i+1;
 					else
 						swapIndex = 2*i+2;
 				}
 
-				if(heap[i].f > heap[swapIndex].f) {
+				if(heap[i].f < heap[swapIndex].f) {
 					SteerLib::AStarPlannerNode tempNode = heap[swapIndex];
 					heap[swapIndex] = heap[i];
 					heap[i] = tempNode;
 					i = swapIndex;
+				}
+				else if(heap[i].f == heap[swapIndex].f) {
+					int prefG = GFAVOR;
+					if(prefG == -1 && heap[swapIndex].g < heap[i].g) {
+						SteerLib::AStarPlannerNode tempNode = heap[swapIndex];
+						heap[swapIndex] = heap[i];
+						heap[i] = tempNode;
+						i = swapIndex;
+					}
+					else if(prefG == 1 && heap[swapIndex].g > heap[i].g) {
+						SteerLib::AStarPlannerNode tempNode = heap[swapIndex];
+						heap[swapIndex] = heap[i];
+						heap[i] = tempNode;
+						i = swapIndex;
+					}
+					else {
+						return;
+					}
 				}
 				else {
 					return;
@@ -158,10 +190,15 @@ namespace SteerLib
 			int newIndex = gSpatialDatabase->getCellIndexFromGridCoords(parentX+xIncr, parentZ+zIncr);
 			Util::Point newPoint;
 			gSpatialDatabase->getLocationFromIndex(newIndex, newPoint);
-			SteerLib::AStarPlannerNode newNode = SteerLib::AStarPlannerNode(newPoint, parentNode.g+1, parentNode.g+1+calcHeur(newPoint, goal, false), parentNode.gridIndex);
+			double newG = parentNode.g+1;
+			//diagonal movement costs more (root2)
+			if(DIAGMOD && zIncr != 0 && xIncr != 0) {
+				newG += 0.414; //root2 rounded
+			}
+			SteerLib::AStarPlannerNode newNode = SteerLib::AStarPlannerNode(newPoint, newG, max-(newG+HEURISTICWEIGHT*calcHeur(newPoint, goal, false)), parentNode.gridIndex);
 			newNode.gridIndex = newIndex;
 			//if(t<20)
-			std::cout << newNode.point << " " << newNode.parentIndex << std::endl;
+			std::cout << newNode.point << " " << newNode.f << std::endl;
 			/*if(t<20){
 				std::cout << newNode.point << "   " << (*newNode.parent).point << "  ";
 				if(newNode.parent->parent != NULL)
@@ -181,14 +218,14 @@ namespace SteerLib
 				return;
 			}
 
-			if(newNode.f < heap[i].f) {
+			if(newNode.f > heap[i].f) {
 				heap[i] = newNode;
 				siftUp(i);
 			}
 		}
 		private:
 		double calcHeur(Util::Point start, Util::Point goal, bool manhattan) {
-		if(manhattan == true) {
+		if(MANHATTAN) {
 			return abs(start.x - goal.x) + abs(start.z - goal.z);
 		}	
 		else {
@@ -224,8 +261,10 @@ namespace SteerLib
 		priorityQueue openNodes = priorityQueue();
 		std::vector<SteerLib::AStarPlannerNode> closedNodes;
 
+		double max = 10000;
+
 		//Build start node
-		SteerLib::AStarPlannerNode startNode = SteerLib::AStarPlannerNode(start, 0, 0+calcHeuristic(start, goal, false), -1);
+		SteerLib::AStarPlannerNode startNode = SteerLib::AStarPlannerNode(start, 0, max-(0+HEURISTICWEIGHT*calcHeuristic(start, goal, false)), -1);
 		startNode.gridIndex = gSpatialDatabase->getCellIndexFromLocation(start);
 		openNodes.insert(startNode);
 	
@@ -239,7 +278,7 @@ namespace SteerLib
 			SteerLib::AStarPlannerNode currNode = openNodes.pop();
 			closedNodes.push_back(currNode);
 			//if(t<20)
-				std::cout << std::endl << currNode.point << "   " << currNode.gridIndex << "  " << currNode.parentIndex << std::endl;
+				std::cout << std::endl << currNode.point << "   " << currNode.f << "  " << currNode.parentIndex << std::endl;
 			t++;
 			
 			//Found goal, trace back for path
@@ -286,7 +325,6 @@ namespace SteerLib
 				if(searchClosed(t, closedNodes, currNode.gridIndex, -1, 0, gSpatialDatabase)==-1) {	
 					//Is in open set?
 					openNodes.update(t, currNode, -1, 0, gSpatialDatabase, goal);
-					std::cout << currNode.parentIndex << std::endl;
 				}
 
 			}
