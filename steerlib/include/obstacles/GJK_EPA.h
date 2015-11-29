@@ -130,6 +130,9 @@ namespace SteerLib
 
 		static bool GJK(std::vector<Util::Vector> shape1, std::vector<Util::Vector> shape2, std::vector<Util::Vector>& simplex);
 
+		//static bool concaveGJK(std::vector<Util::Vector> shape1, std::vector<Util::Vector> shape2, std::vector<Util::Vector>& simplex);
+
+
 		static bool EPA(std::vector<Util::Vector> shape1, std::vector<Util::Vector> shape2, std::vector<Util::Vector> simplex, float& depth, Util::Vector& mtv);
 
 	private:
