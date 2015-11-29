@@ -118,6 +118,10 @@ class SocialForcesAgent : public SteerLib::AgentInterface
         Util::Vector calcAgentRepulsionForce(float dt);
         Util::Vector calcWallRepulsionForce(float dt);
 
+	Util::Vector calcSlidingForce(float dt);
+	
+	Util::Vector crossProduct(Util::Vector v1, Util::Vector v2);
+
         Util::Vector calcWallNormal(SteerLib::ObstacleInterface* obs);
         std::pair<Util::Point, Util::Point> calcWallPointsFromNormal(SteerLib::ObstacleInterface* obs, Util::Vector normal);
         Util::Vector calcObsNormal(SteerLib::ObstacleInterface* obs);
