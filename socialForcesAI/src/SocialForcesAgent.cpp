@@ -468,43 +468,7 @@ std::pair<Util::Point, Util::Point> SocialForcesAgent::calcClosestWall(SteerLib:
 
 }
 
-std::pair<Util::Point, Util::Point> SocialForcesAgent::calcWallPoints(SteerLib::ObstacleInterface* obs, float & maxDiscr) {
-	std::vector<Util::Vector> obstacleVertices;
-	obs->returnVertices(obstacleVertices);
-	Util::Vector maxEndPoint1, maxEndPoint2;
-	maxDiscr = std::numeric_limits<float>::max() * -1.0;
 
-	//std::cout << obstacleVertices.size() << std::endl;
-	for(int i=0; i<obstacleVertices.size(); i++) {
-		Util::Vector prevVertex;
-		if(i==0)
-			prevVertex = obstacleVertices[obstacleVertices.size()-1];
-		else
-			prevVertex = obstacleVertices[i-1];
-		Util::Vector currVertex = obstacleVertices[i];
-		//std::cout << prevVertex << " ";
-		float dx = (currVertex.x - this->position().x) - (prevVertex.x - this->position().x);
-		float dz = (currVertex.z - this->position().z) - (prevVertex.z - this->position().z);
-		float dr = sqrt(pow(dx, 2) + pow(dz, 2));
-		float determinent = ((prevVertex.x-this->position().x)*(currVertex.z-this->position().z)) - ((currVertex.x-this->position().x)*(prevVertex.z-this->position().z));
-		float discriminant = pow(this->radius(), 2) * pow(dr, 2) - pow(determinent, 2);
-
-		//std::cout << discriminant << std::endl;
-		if(discriminant > maxDiscr) {
-			maxEndPoint1 = prevVertex;
-			maxEndPoint2 = currVertex;
-			maxDiscr = discriminant;
-		}
-
-		/*if(discriminant >= 0) { //obstacle intersection
-			return std::make_pair(Util::Point(prevVertex.x, 0, prevVertex.z), Util::Point(currVertex.x, 0, currVertex.z));
-		}*/
-	}
-
-	return std::make_pair(Util::Point(maxEndPoint1.x, 0, maxEndPoint1.z), Util::Point(maxEndPoint2.x, 0, maxEndPoint2.z));
-
-	//throw std::logic_error("Error");
-}
 
 /**
  * Basically What side of the obstacle is the agent on use that as the normal
