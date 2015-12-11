@@ -17,7 +17,7 @@
 
 class STEERLIB_API PolygonObstacle : public SteerLib::ObstacleInterface {
 public:
-	PolygonObstacle(std::vector<Util::Point> points, float traversalCost=1001.0f);
+	PolygonObstacle(std::vector<Util::Point> points, float traversalCost=1002.0f);
 	virtual ~PolygonObstacle();
 
 	// ObstacleInterface functionality (not all virtual functions were overridden here)

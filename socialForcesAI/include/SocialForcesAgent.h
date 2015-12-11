@@ -120,10 +120,10 @@ class SocialForcesAgent : public SteerLib::AgentInterface
 
 	Util::Vector calcSlidingForce(float dt);
 	
-	Util::Vector crossProduct(Util::Vector v1, Util::Vector v2);
-
         Util::Vector calcWallNormal(SteerLib::ObstacleInterface* obs);
         std::pair<Util::Point, Util::Point> calcWallPointsFromNormal(SteerLib::ObstacleInterface* obs, Util::Vector normal);
+	std::pair<Util::Point, Util::Point> calcClosestWall(SteerLib::ObstacleInterface* obs);
+	std::pair<Util::Point, Util::Point> calcWallPoints(SteerLib::ObstacleInterface* obs, float & maxDiscr);
         Util::Vector calcObsNormal(SteerLib::ObstacleInterface* obs);
 
         // For midterm planning stores the plan to the current goal

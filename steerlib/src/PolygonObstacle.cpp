@@ -27,12 +27,28 @@ PolygonObstacle::PolygonObstacle(std::vector<Util::Point> points, float traversa
 	_radius = 0.0;
 	float ymin = 0.0;
 	float ymax = 1.0;
+	float xmin, xmax, zmin, zmax;
+	xmin = _points[0].x;
+	xmax = _points[0].x;
+	zmin = _points[0].z;
+	zmax = _points[0].z;
+	for(int i=1; i<_points.size(); i++) {
+		if(_points[i].x > xmax)
+			xmax = _points[i].x;
+		if(_points[i].x < xmin)
+			xmin = _points[i].x;
+		if(_points[i].z > zmax)
+			zmax = _points[i].z;
+		if(_points[i].z < zmin)
+			zmin = _points[i].z;
+	}
+
 	_bounds.ymin = ymin;
 	_bounds.ymax = ymax;
-	_bounds.xmin = _centerPosition.x - _radius;
-	_bounds.xmax = _centerPosition.x + _radius;
-	_bounds.zmin = _centerPosition.z - _radius;
-	_bounds.zmax = _centerPosition.z + _radius;
+	_bounds.xmin = xmin+(xmax-xmin)/8;
+	_bounds.xmax = xmax-(xmax-xmin)/8;
+	_bounds.zmin = zmin+(zmax-zmin)/8;
+	_bounds.zmax = zmax-(zmax-zmin)/8;
 
 	// TODO make parameter
 	isConvex_ = true;

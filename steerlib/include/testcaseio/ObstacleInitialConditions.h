@@ -87,11 +87,33 @@ namespace SteerLib {
 	struct PolygonObstacleInitialConditions : public ObstacleInitialConditions
 	{
 		std::vector<Util::Point> _vertices;
+		//float xmin, xmax, ymin, ymax, zmin, zmax;
 		PolygonObstacleInitialConditions() {};
 		PolygonObstacleInitialConditions(const std::vector<Util::Point> & vertices)
 		{
 			for(int i=0; i<vertices.size(); i++)
 				_vertices.push_back(vertices[i]);
+
+			/*xmin = _vertices[0].x;
+			xmax = _vertices[0].x;
+			ymin = _vertices[0].y;
+			ymax = _vertices[0].y;
+			zmin = _vertices[0].z;
+			zmax = _vertices[0].z;
+			for(int i=1; i<_vertices.size(); i++) {
+				if(_vertices[i].x > xmax)
+					xmax = _vertices[i].x;
+				if(_vertices[i].x < xmin)
+					xmin = _vertices[i].x;
+				if(_vertices[i].y > ymax)
+					ymax = _vertices[i].y;
+				if(_vertices[i].y > ymin)
+					ymin = _vertices[i].y;
+				if(_vertices[i].z > zmax)
+					zmax = _vertices[i].z;
+				if(_vertices[i].z > zmin)
+					zmin = _vertices[i].z;
+			}*/
 		}
 		
 		virtual ObstacleInterface* createObstacle() { return new PolygonObstacle(_vertices); }

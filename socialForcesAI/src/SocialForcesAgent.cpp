@@ -234,6 +234,18 @@ std::pair<float, Util::Point> minimum_distance(Util::Point l1, Util::Point l2, U
   return std::make_pair((p - projection).length(), projection) ;
 }
 
+Util::Vector crossProduct(Util::Vector v1, Util::Vector v2) {
+	Util::Vector prod;
+	prod.x = v1.y*v2.z - v1.z*v2.y;
+	prod.y = v1.z*v2.x - v1.x*v2.z;
+	prod.z = v1.x*v2.y - v1.y*v2.x;
+
+	return prod;
+}
+
+Util::Vector tripleProduct(Util::Vector v1, Util::Vector v2, Util::Vector v3) {
+	return crossProduct(crossProduct(v1, v2), v3);
+}
 
 Util::Vector SocialForcesAgent::calcProximityForce(float dt)
 {
@@ -256,11 +268,19 @@ Util::Vector SocialForcesAgent::calcProximityForce(float dt)
 		}
 
 		else {
+			//std::cout << "found obs" << std::endl;
 			tmp_ob = dynamic_cast<SteerLib::ObstacleInterface *>(*neighbor);
-			Util::Vector wall_normal = calcWallNormal(tmp_ob);
-			std::pair<Util::Point, Util::Point> line = calcWallPointsFromNormal(tmp_ob, wall_normal);
+			float discrim;
+			std::pair<Util::Point, Util::Point> line = calcClosestWall(tmp_ob);
+			//std::cout << line.first << " " << line.second << std::endl;
 			std::pair<float, Util::Point> min_stuff = minimum_distance(line.first, line.second, position());
-			Util::Vector away_obs_tmp = normalize(position() - min_stuff.second);
+			Util::Vector away_obs_tmp;
+			if(Util::Vector((line.first-line.second).z*-1, 0 ,(line.first-line.second).x) * (this->position() - min_stuff.second) >= 0) {
+				away_obs_tmp = normalize(Util::Vector((line.first-line.second).z*-1, 0 ,(line.first-line.second).x));
+			}
+			else
+				away_obs_tmp = normalize(Util::Vector((line.first-line.second).z, 0 ,(line.first-line.second).x*-1));
+			//std::cout << away_obs_tmp << std::endl;
 			away_obs = away_obs + (away_obs_tmp * (_SocialForcesParams.sf_wall_a * exp((((this->radius() - (this->position() - min_stuff.second).length()) / _SocialForcesParams.sf_wall_b))) * dt));
 		}
 	}
@@ -276,7 +296,6 @@ Vector SocialForcesAgent::calcGoalForce(Vector _goalDirection, float _dt)
 	returnVector = (((_goalDirection * PREFERED_SPEED) - velocity()) / _dt);
 	return returnVector;
 }
-
 
 Util::Vector SocialForcesAgent::calcRepulsionForce(float dt)
 {
@@ -330,23 +349,23 @@ Util::Vector SocialForcesAgent::calcWallRepulsionForce(float dt)
 		{
 			continue;
 		}
-		if (tmp_ob->computePenetration(this->position(), this->radius()) > 0.000001) {
-			Util::Vector wall_normal = calcWallNormal(tmp_ob);
-			std::pair<Util::Point, Util::Point> line = calcWallPointsFromNormal(tmp_ob, wall_normal);
+		std::pair<Util::Point, Util::Point> line = calcClosestWall(tmp_ob);
+		float dx = (line.second.x - this->position().x) - (line.first.x - this->position().x);
+		float dz = (line.second.z - this->position().z) - (line.first.z - this->position().z);
+		float dr = sqrt(pow(dx, 2) + pow(dz, 2));
+		float determinent = ((line.first.x-this->position().x)*(line.second.z-this->position().z)) - ((line.second.x-this->position().x)*(line.first.z-this->position().z));
+		float discrim = pow(this->radius(), 2) * pow(dr, 2) - pow(determinent, 2);
+ 
+		if (discrim >= 0) {
+			//std::cout <<this->position() << " " << line.first << " " << line.second << " " << discrim << std::endl;
 			std::pair<float, Util::Point> min_stuff = minimum_distance(line.first, line.second, position());
+			//TODO CALCULATE WALL_NORMAL
+			Util::Vector wall_normal = tripleProduct(line.second-line.first, this->position()-line.first, line.second-line.first);
+			//std::cout << wall_normal << std::endl;
 			returnVector = returnVector + wall_normal * (min_stuff.first + radius())*_SocialForcesParams.sf_body_force;
 		}
 	}
 	return returnVector;
-}
-
-Util::Vector SocialForcesAgent::crossProduct(Util::Vector v1, Util::Vector v2) {
-	Util::Vector prod;
-	prod.x = v1.y*v2.z - v1.z*v2.y;
-	prod.y = v1.z*v2.x - v1.x*v2.z;
-	prod.z = v1.x*v2.y - v1.y*v2.x;
-
-	return prod;
 }
 
 Util::Vector SocialForcesAgent::calcSlidingForce(float dt) {
@@ -421,6 +440,70 @@ std::pair<Util::Point, Util::Point> SocialForcesAgent::calcWallPointsFromNormal(
 	{
 		return std::make_pair(Util::Point(box.xmin,0,box.zmin), Util::Point(box.xmin,0,box.zmax));
 	}
+}
+
+std::pair<Util::Point, Util::Point> SocialForcesAgent::calcClosestWall(SteerLib::ObstacleInterface* obs) {
+	std::vector<Util::Vector> obstacleVertices;
+	obs->returnVertices(obstacleVertices);
+	Util::Vector returnPt1, returnPt2;
+	float minDist = std::numeric_limits<float>::max();
+
+	for(int i=0; i<obstacleVertices.size(); i++) {
+		Util::Vector prevVertex;
+		if(i==0)
+			prevVertex = obstacleVertices[obstacleVertices.size()-1];
+		else
+			prevVertex = obstacleVertices[i-1];
+		Util::Vector currVertex = obstacleVertices[i];
+
+		std::pair<float, Util::Point> min_stuff = minimum_distance(Util::Point(prevVertex.x, 0, prevVertex.z), Util::Point(currVertex.x, 0, currVertex.z), position());
+		if(min_stuff.first < minDist) {
+			returnPt1 = prevVertex;
+			returnPt2 = currVertex;
+			minDist = min_stuff.first;
+		}
+
+	}
+	return std::make_pair(Util::Point(returnPt1.x, 0, returnPt1.z), Util::Point(returnPt2.x, 0, returnPt2.z));
+
+}
+
+std::pair<Util::Point, Util::Point> SocialForcesAgent::calcWallPoints(SteerLib::ObstacleInterface* obs, float & maxDiscr) {
+	std::vector<Util::Vector> obstacleVertices;
+	obs->returnVertices(obstacleVertices);
+	Util::Vector maxEndPoint1, maxEndPoint2;
+	maxDiscr = std::numeric_limits<float>::max() * -1.0;
+
+	//std::cout << obstacleVertices.size() << std::endl;
+	for(int i=0; i<obstacleVertices.size(); i++) {
+		Util::Vector prevVertex;
+		if(i==0)
+			prevVertex = obstacleVertices[obstacleVertices.size()-1];
+		else
+			prevVertex = obstacleVertices[i-1];
+		Util::Vector currVertex = obstacleVertices[i];
+		//std::cout << prevVertex << " ";
+		float dx = (currVertex.x - this->position().x) - (prevVertex.x - this->position().x);
+		float dz = (currVertex.z - this->position().z) - (prevVertex.z - this->position().z);
+		float dr = sqrt(pow(dx, 2) + pow(dz, 2));
+		float determinent = ((prevVertex.x-this->position().x)*(currVertex.z-this->position().z)) - ((currVertex.x-this->position().x)*(prevVertex.z-this->position().z));
+		float discriminant = pow(this->radius(), 2) * pow(dr, 2) - pow(determinent, 2);
+
+		//std::cout << discriminant << std::endl;
+		if(discriminant > maxDiscr) {
+			maxEndPoint1 = prevVertex;
+			maxEndPoint2 = currVertex;
+			maxDiscr = discriminant;
+		}
+
+		/*if(discriminant >= 0) { //obstacle intersection
+			return std::make_pair(Util::Point(prevVertex.x, 0, prevVertex.z), Util::Point(currVertex.x, 0, currVertex.z));
+		}*/
+	}
+
+	return std::make_pair(Util::Point(maxEndPoint1.x, 0, maxEndPoint1.z), Util::Point(maxEndPoint2.x, 0, maxEndPoint2.z));
+
+	//throw std::logic_error("Error");
 }
 
 /**

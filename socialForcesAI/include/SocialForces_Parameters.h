@@ -24,7 +24,7 @@
 #define QUERY_RADIUS 3.0f // not defined in paper
 #define BODY_FORCE 1500.0f // K (big K) 120000 / 80
 #define AGENT_BODY_FORCE 1500.0f
-#define SLIDING_FRICTION_FORCE 3000.0f // k (small k) 240000 / 80 = 3000
+#define SLIDING_FRICTION_FORCE 0.0f // k (small k) 240000 / 80 = 3000
 #define AGENT_B 0.08f // inverse proximity force importance
 #define AGENT_A 25.0f // 2000 / 80 Yep its just called A... inverse proximity force importance
 #define WALL_B 0.08f //  inverse proximity force importance

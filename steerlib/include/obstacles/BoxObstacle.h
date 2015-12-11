@@ -29,7 +29,12 @@ namespace SteerLib {
 		void draw(); // implementation in .cpp
 		const Util::AxisAlignedBox & getBounds() { return _bounds; }
 
-        virtual void returnVertices(std::vector<Util::Vector>& _out) { return; }
+        virtual void returnVertices(std::vector<Util::Vector>& _out) {
+		_out.push_back(Util::Vector(_bounds.xmin, 0, _bounds.zmin));
+		_out.push_back(Util::Vector(_bounds.xmin, 0, _bounds.zmax));
+		_out.push_back(Util::Vector(_bounds.xmax, 0, _bounds.zmax));
+		_out.push_back(Util::Vector(_bounds.xmax, 0, _bounds.zmin));
+	}
 
 		/// @name The SpatialDatabaseItem interface
 		/// @brief The BoxObstacle implementation of this interface represents a box that blocks line of sight if it is taller than 0.5 meter, and cannot be traversed.
