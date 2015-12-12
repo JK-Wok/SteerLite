@@ -238,13 +238,55 @@ bool SteerLib::GJK_EPA::GJK(std::vector<Util::Vector> shape1, std::vector<Util::
 				if(dotProduct(v3, arbitraryVector) <= 0) //new point for simplex does not pass the origin, no intersect
 					break;
 
-				float findOrigin1, findOrigin2; //used to determine what partition of the extended edge minkowski difference that the origin is in
+				/*float findOrigin1, findOrigin2; //used to determine what partition of the extended edge minkowski difference that the origin is in
 				findOrigin1 = dotProduct(v1-v3, v3*-1);
-				//std::cout << v1-v3 << std::endl;
+				std::cout << v1-v3 << std::endl;
 				findOrigin2 = dotProduct(v2-v3, v3*-1);
 				if(findOrigin1<0 && findOrigin2<0) //origin is outside simplex, no intersect
 					break;
 				else if(findOrigin1>=0 && findOrigin2>=0) { //origin is in simplex, shapes intersect
+					std::vector<Util::Vector> returnSimplex;
+					returnSimplex.push_back(v1);
+					returnSimplex.push_back(v2);
+					returnSimplex.push_back(v3);
+					simplex = returnSimplex;
+					std::cout << v1 << v2 << v3 << std::endl;
+					for(int k=0; k<decomp1.at(i).size(); k++) {
+						std::cout << decomp1.at(i).at(k) << " ";
+					}
+					std::cout << std::endl;
+					for(int k=0; k<decomp2.at(j).size(); k++) {
+						std::cout << decomp2.at(j).at(k) << " ";
+					}
+
+					return true;
+				}
+
+				if(findOrigin1>=0 && findOrigin2<0) { //keep v1, discard v2
+					v2 = v3;
+				}
+				else if(findOrigin1<0 && findOrigin2>=0) { //keep v2, discard v1
+					v1 = v2;
+					v2 = v3;
+				}*/
+				Util::Vector edge1, edge2;
+				edge1 = v1-v3;
+				edge2 = v2-v3;
+				Util::Vector edge1Perp, edge2Perp;
+				edge1Perp = Util::Vector(edge1.z*-1, 0, edge1.x);
+				if(edge1Perp * edge2 > 0)
+					edge1Perp = Util::Vector(edge1.z, 0, edge1.x*-1);
+				edge2Perp = Util::Vector(edge2.z*-1, 0, edge2.x);
+				if(edge2Perp * edge1 > 0)
+					edge2Perp = Util::Vector(edge2.z, 0, edge2.x*-1);
+				Util::Vector findOrigin1, findOrigin2;
+				//std::cout << v1<<v2<<v3<< std::endl;
+				findOrigin1 = edge1Perp;
+				findOrigin2 = edge2Perp;
+				/*findOrigin1 = tripleProduct(v1-v3, v2-v3, v2-v3);
+				findOrigin2 = tripleProduct(v2-v3, v1-v3, v1-v3);*/
+				//std::cout << findOrigin1 << " " << findOrigin2 << std::endl;
+				if(findOrigin1*(v3*-1)<=0 && findOrigin2*(v3*-1)<=0) { //simplex contains origin, intersects
 					std::vector<Util::Vector> returnSimplex;
 					returnSimplex.push_back(v1);
 					returnSimplex.push_back(v2);
@@ -260,12 +302,15 @@ bool SteerLib::GJK_EPA::GJK(std::vector<Util::Vector> shape1, std::vector<Util::
 					}*/
 
 					return true;
-				}
 
-				if(findOrigin1>=0 && findOrigin2<0) { //keep v1, discard v2
+				}
+				else if(findOrigin1*(v3*-1)>0 && findOrigin2*(v3*-1)>0) {
+					break;
+				}
+				else if(findOrigin1*(v3*-1)>0) {
 					v2 = v3;
 				}
-				else if(findOrigin1<0 && findOrigin2>=0) { //keep v2, discard v1
+				else {
 					v1 = v2;
 					v2 = v3;
 				}
